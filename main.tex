@@ -1,0 +1,538 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage[font={small,it}]{caption}
+\raggedright
+\usepackage[skip=10pt plus1pt, indent=25pt]{parskip}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage[backend=biber]{biblatex}
+\pagenumbering{arabic}
+\addbibresource{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/LaTeX/Bibliography.bib}\nocite{*}
+\title{Optimizing Cod Fishing With Matrix Population Models}
+\author{Mitchell Blaha}
+\date{March 2024}
+
+\begin{document}
+
+    \maketitle
+    \tableofcontents
+
+    \newpage
+    \begin{center}
+        \section{Introduction}\label{sec:introduction}
+    \end{center}
+
+    Matrix population models are used to predict how a population will change over time.
+    They are not necessary in cases when the organism is basic, and does not have multiple relevant stages of development, because those populations can simply be modeled by one function of time and initial total population.
+    Matrix population models are used when an organism is more advanced, specifically with distinct and important stages of life~\cite{shoemaker_lab_2024}.
+    They do, of course, have certain limitations, but one situation in which they can be useful is predicting how a population of fish will change over time.
+
+    For this project, matrix population models are utilized in order to determine the most appropriate cod fishing scheme.
+    Over-fishing could lead to the extinction of cod in the area, and too conservative of a scheme would leave money on the table for fishermen.
+
+    The city has gathered data on the cod population and has constructed a matrix population model according to its data.
+    Based on this model, it must be determined whether the population is stable with the current fishing scheme, and the extent to which this scheme would have to change to make the population stable.
+    These conclusions will then be used to analyze the viability of a fishing scheme proposed by a lobbyist, which loosens the fishing laws (allowing more fish to be caught).
+
+    It is worth noting that matrix population models are useful for \textbf{numerical analysis in the short term} and \textbf{qualitative analysis in the long term}.
+    This essentially means that they get less accurate over time.
+
+    As the cod population currently stands, it will fluctuate slightly in the short term and grow in the long term.
+    More fishing could be done while maintaining a healthy population of fish.
+    With the lobbyists proposed scheme, the cod population will again fluctuate in the short term, but shrink in the long term.
+    This is a result of loosening the fishing laws too much, so there are not enough new fish being born to counteract those that are being fished.
+
+    It is possible to find a stable balance, but depending on the number of fish that the city wishes to be caught in a year, the time until the stable scheme may be implemented changes.
+    If many fish are to be caught each year, the population must be allowed to grow to a sufficient size to counteract the fishing with reproduction.
+
+    \newpage
+    \begin{center}
+        \section{Mathematical Methods}\label{sec:mathematical-methods}
+    \end{center}
+
+    \subsection{Defining Matrix Population Models}\label{subsec:defining-matrix-population-models}
+
+    \hspace{\parindent}A matrix population model is a system of linear equations that defines how each stage of a given population changes with each change in time~\cite{shoemaker_lab_2024}.
+    For example, suppose that there is a population of rats that have been observed for a while.
+    It has been determined that no rat lives to three years old, and that there is an equal number of males and females in the population.
+    Furthermore, the survival rates of each age of rat have been determined.
+    Half of the ``baby'' rats (between zero and one-year-old) live to become one-year-old and three fifths of the one-year-old rats live to become two years old.
+    As stated before, no rat lives to three, so all the two-year-olds die.
+    The other important number in a matrix population model (aside from the survival rate) is the ``fecundity,'' the average number of offspring produced by each individual during a time step.
+    Fecundity is equal to some ``fertility'' value times the survival rate, because individuals that die do not reproduce.
+    The fecundity of baby rats has been determined to be 0.6 (three babies are born for every five existing baby rats), 2.4 for one-year-olds, and 0.4 for two-year-olds.
+    Using these numbers (survival rate and fecundity), a system of linear equations can be constructed to model this population (t is years):
+    \begin{equation}
+        P_0(t+1)=0.6 \cdot P_0(t)+2.4 \cdot P_1(t)+0.4 \cdot P_2(t)\label{eq:equation1}
+    \end{equation}
+    \noindent This is the sum of all new babies in the new year, given by the sum of the products of the fecundities and the populations in the previous year.
+    \begin{equation}
+        P_1(t+1)=0.5 \cdot P_0(t)\label{eq:equation2}
+    \end{equation}
+    \noindent All one-year-olds are just babies who lived one year.
+    \begin{equation}
+        P_2(t+1)=0.6 \cdot P_1(t)\label{eq:equation3}
+    \end{equation}
+    \noindent All two-year-olds are one-year-olds from the last year.
+    From this system of linear equations, a matrix can be constructed:
+    \begin{equation}
+        \begin{bmatrix}
+            0.6 & 2.4 & 0.4 \\
+            0.5 & 0   & 0   \\
+            0   & 0.6 & 0
+        \end{bmatrix}\label{eq:equation4}
+    \end{equation}
+    Each column and row represents a stage in the life of the rat.
+    The top row represents the fecundity, and the second and third row represent survival rates for their respective stages, which are represented by columns.
+    For example, the value in row two and column one, 0.5, defines the proportion of rats in stage one that advance to stage two.
+    The value in row one column three, 0.4, defines the proportion of rats in stage three that will have offspring in stage one next year.
+
+    This matrix (4) is known as the \textbf{transition matrix}.
+    In order to use it to make predictions about the future, an initial state is required.
+    The \textbf{population vector} defines this initial state.
+    The \textit{i}th component of the population vector represents the population of the \textit{i}th stage.
+    The population vector can be represented by either a column or row vector, and if it is a row vector the transition matrix comes before the population vector in equation (5) so that the multiplication works out.
+    These matrices are constructed such that the product of the \textbf{population vector} and the \textbf{transition matrix to the power of \textit{t}} equals the \textbf{predicted population at time \textit{t}}.
+    For the population of rats, if it is assumed that there are 100 babies, 50 one-year-olds, and 25 two-year-olds, this equation is as follows:
+    \begin{equation}
+        \begin{bmatrix}
+            100 \\
+            50  \\
+            25
+        \end{bmatrix}
+        \begin{bmatrix}
+            0.6 & 2.4 & 0.4 \\
+            0.5 & 0   & 0   \\
+            0   & 0.6 & 0
+        \end{bmatrix}^\textit{t}=
+        \begin{bmatrix}
+            \hat{P_0} \\
+            \hat{P_1} \\
+            \hat{P_2}
+        \end{bmatrix}\label{eq:equation5}
+    \end{equation}
+    \noindent Matrix population models assume the following:
+    \begin{itemize}
+        \item The fecundity and survival rates apply universally to all members of a group or stage
+        \item There is an equal proportion of males and females in the population and within each stage of the population
+        \item Individuals progress through stages as some function of discrete time steps
+        \item Circumstances do not change with time (e.g.\ fecundity rate stays constant, survival rate does not decrease as a result of scarce resources, etc.)
+    \end{itemize}
+
+    \subsection{Comparison to Other Models}\label{subsec:comparison-to-other-models}
+
+    \hspace{\parindent}Matrix population models are not the only method for predicting how populations will change over time.
+    Matrix models are a refinement of the traditional exponential growth model, which is one of the two most widely used population models, the other being logistic models~\cite{hendricks_55_2021}.
+
+    \subsubsection{Exponential Models}
+
+    \hspace{\parindent}Exponential growth models are defined by the equation:
+    \begin{equation}
+        P'(t)=\lambda \cdot P(t)\label{eq:equation6}
+    \end{equation}
+    \noindent Where $P(t)$ equals the population at time \textit{t}, $P'(t)$ equals the rate of change of the population at time \textit{t}, and $\lambda$ equals the rate of growth of the population.
+    $\lambda$ differs from $P'(t)$ because $\lambda$ is a constant, while $P'(t)$ depends on the population and $\lambda$.
+
+    \subsubsection{Logistic Models}
+
+    \hspace{\parindent}Logistic models are more complex.\ The model is defined by the equation:
+    \begin{equation}
+        P'(t)=(\beta - \delta)P(t)\label{eq:equation7}
+    \end{equation}
+    Where $P'(t)$ equals the rate of change of the population at time \textit{t}, $\beta$ equals the birth rate of the population, $\delta$ equals the death rate of the population (assumed to be constant), and $P(t)$ equals the population at time \textit{t}.
+    Birth rates are not usually constant.
+    Instead, they typically \textbf{decrease linearly over time.} The birth rate is thus given by:
+    \begin{equation}
+        \beta = \beta_0 - \beta_{1}P(t)\label{eq:equation8}
+    \end{equation}
+    Where $\beta_0$ is the maximum birth rate (if the population was zero) and $\beta_1$ is the change in the birth rate with respect to population.
+    These numbers can be thought of as the \("\)\textit{y}-intercept\("\) and \("\)slope\("\) of the graph of birth rate vs.
+    population.
+    Applying (8) to the general logistic equation (7):
+    \begin{equation}
+        P'(t)=((\beta_0 - \beta_1)P(t) - \delta)P(t)\label{eq:equation9}
+    \end{equation}
+    Which is rewritten as:
+    \begin{equation}
+        P'(t)=kP(t) \cdot (M - P(t))\label{eq:equation10}
+    \end{equation}
+    Where $k=\beta_1$ and $M=\frac{\beta_0 - \delta}{\beta_1}$.
+
+    The most significant difference between these models is the information required.
+    Exponential models only require an initial population and a rate of growth, while logistic models require a birth rate function, death rate, and initial population.
+    Because of this, they lend themselves to different applications. \textbf{Exponential models} are efficient, do not require much information, and provide useful insight for short time periods.
+    They always diverge, however, and either predict infinite growth or extinction in the long term. \textbf{Logistic models} are more complex, less efficient, and require more information, but are much more accurate than exponential models.
+    They always converge on some value that is the  ``stationary population''~\cite{hendricks_55_2021}.
+
+    \begin{figure} [!h]
+        \begin{minipage}{0.5\linewidth}
+            \centering
+            \includegraphics[scale=0.36]{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/Graphs/Exponential Model Example Graph}
+            \caption*{$P'(t)=0.467P(t)$}
+        \end{minipage}\hfill
+        \begin{minipage}{0.5\linewidth}
+            \centering
+            \includegraphics[scale=0.36]{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/Graphs/Logistic Model Example Graph}
+            \caption*{$P'(t)=10,000P(t) \cdot \left(\frac{1}{10,000}-P(t)\right)$}
+        \end{minipage}
+        \caption{Exponential Model (left) vs. Logistic Model (right): $t\in[0, 20]$}
+        \label{fig:exp_v_log}
+    \end{figure}
+
+    It can be seen in Figure~\ref{fig:exp_v_log} that the exponential model diverges and the logistic model converges (to $P=10,000$), as expected.
+
+    \subsubsection{Matrix Models}
+
+    \hspace{\parindent}Matrix models are a type of exponential model,but they are slightly more accurate in the short term.
+    This is because they account for imbalance in population proportions of the different stages.
+    Matrix models, like exponential models, always diverge, but the proportions of different stages converge (e.g.\ 40\% of all rats are one year old).
+    Before these proportions have converged, however, the instantaneous growth rate $P'(t)$ can oscillate.
+    In the long term matrix models behave exactly the same as discrete exponential models, and can actually be represented by the exponential model (6) as \textit{t} approaches $\infty$.
+    The long term exponential growth rate ($\lambda$ in the exponential model (6)) of a population with transition matrix $T$ is equal to the dominant eigenvalue of $T$.
+    This value $\lambda$ is referred to as the \textit{asymptotic growth rate} of a transition matrix, and is most useful for analyzing long term dynamics of a population~\cite{shoemaker_lab_2024}.
+
+    \subsection{Matrix Operations}\label{subsec:matrix-operations}
+
+    \hspace{\parindent}The most obvious difference between traditional exponential models and matrix models is the presence of the matrix.
+    Matrices allow for various operations to be done on the transition matrix using matrix algebra, which cause changes in the population projection that can be meaningful.
+
+    \subsubsection{Scalar Multiplication}
+
+    \hspace{\parindent}The scale of a transition matrix is linearly correlated with asymptotic growth rate, and independent of stable stage distribution.
+    For example, the rat transition matrix from earlier (4):
+    \begin{equation}
+        \begin{bmatrix}
+            0.6 & 2.4 & 0.4 \\
+            0.5 & 0   & 0   \\
+            0   & 0.6 & 0
+        \end{bmatrix}\label{eq:equation11}
+    \end{equation}
+    has an asymptotic growth rate of about $1.47$ and a stable stage distribution $\begin{bmatrix} 0.68 & 0.23 & 0.09 \end{bmatrix}$.
+    If the matrix is scaled by a factor of $\frac{1}{2}$:
+    \begin{equation}
+        \begin{bmatrix}
+            0.3  & 1.2 & 0.2 \\
+            0.25 & 0   & 0   \\
+            0    & 0.3 & 0
+        \end{bmatrix}\label{eq:equation12}
+    \end{equation}
+    the asymptotic growth rate changes to about $0.74$ ($\frac{1}{2}$ of the growth rate of (11)) and the stable stage distribution remains identical.
+
+    \subsubsection{Matrix Sums of Transition Matrices}
+
+    \hspace{\parindent}Sums of transition matrices have less significance than scalar multiples do.
+    While adding a matrix $A$ to a transition matrix $T$ is a good way to introduce changes to how a population behaves, how $A$ behaves as a transition matrix itself is not useful for predicting how adding it to $T$ will affect $T$ as a transition matrix.
+    The transition matrix $T$ must be known in order to determine the difference in population dynamics between $T$ and $T+A$.
+
+    \subsubsection{Predicting Past Populations (Matrix Inverses)}
+
+    \hspace{\parindent}Due to the nature of matrix population models, they are not super useful for explaining past populations.
+    They can, however, give some insight into the recent past.
+    Because the stage distribution of a population converges to a certain distribution defined by the transition matrix, the second order changes in the population decrease as time goes on.
+    \begin{figure} [!h]
+        \centering
+        \includegraphics[scale=0.5]{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/Graphs/Matrix Model Second Order Example Graph}
+        \caption{Second order dynamics of rat population}
+        \label{fig:sec_order_ex}
+    \end{figure}
+    This can be seen in Figure~\ref{fig:sec_order_ex}, the second order dynamics from the same rat population as earlier.
+    Naturally, if this same model is used to go back in time, the amplitude of the second order dynamics will increase the farther back time goes.
+    This means that the prediction will become less and less accurate, and depending on the transition matrix, negative values for stage populations are possible.
+
+    \subsection{Linear Transformations and Rank}\label{subsec:linear-transformations-and-rank}
+
+    \hspace{\parindent}Because an $n$ x $n$ transition matrix with nullity $= 1$ transforms a $1$ x $n$ population vector in $\mathbb{R}^n$ to some vector in $\mathbb{R}^{n-1}$, it follows that the stable stage distribution will only be some vector in $\mathbb{R}^{n-1}$ rather than in $\mathbb{R}^n$.
+    This means that at least one stage in the stable distribution will be a linear combination of the other stages.
+    The same is true as nullity increases, and the number of dependent stages in the stable distribution is the same as the nullity of the transition matrix.
+    This stable distribution is unique for each transition matrix and can be quite useful insight (e.g.~determining the number of lions over 20 years old there will likely be in five years).
+    Namely, this vector will be the eigenvector corresponding to the dominant eigenvalue $\lambda$ of the transition matrix~\cite{shoemaker_lab_2024}.
+
+%    Can a transition matrix with rank $n$ and nullity $> 0$ be replaced by an $n$ x $n$ matrix with nullity $= 0$?
+%    The matrices will be considered equal for the purposes of these models if the trajectory is identical at all time steps.
+%    The asymptotic growth rate could definitely be recreated, as the dominant eigenvalue can be any number in $\mathbb{R}$ for a matrix of any size.
+%    What remains are the second order dynamics.
+%    Can short term trajectory be replicated exactly by removing the dependent column and altering the independent columns accordingly?
+%    I don't know, but seems very likely that the answer is yes.
+    % **figure out whether matrices with rank n and nullity > 0 can be replaced by an n x n matrix**
+
+    \newpage
+    \begin{center}
+        \section{Analysis}\label{sec:analysis}
+    \end{center}
+
+    \subsection{Project Scenario}\label{subsec:project-scenario}
+
+    All the properties of matrix population models, and specifically of transition matrices, discussed in the previous chapter will be utilized to analyze the situation presented in the project scenario.
+    Because the government needs to regulate offshore fishing in order to preserve a healthy ecosystem, it is helpful for them to monitor the population of fish and predict how it will change under current conditions.
+    It has chosen to do this by using matrix population models.
+    Below is the transition matrix of the cod population:
+    \begin{equation}
+        T =
+        \begin{bmatrix}
+            0    & 1   & 1.9 & 1.7 & 0   \\
+            0.61 & 0   & 0   & 0   & 0   \\
+            0   & 0.33 & 0   & 0   & 0   \\
+            0   & 0   & 0.21 & 0   & 0   \\
+            0   & 0   & 0   & 0.13 & 0.08
+        \end{bmatrix}\label{eq:equation13}
+    \end{equation}
+
+    This is a Leslie matrix, meaning that the stages are based on age.
+    The five categories are 0--2 years old, 2--4 years old, 4--6 years old, 6--8 years old, and older than 8 years.
+    This means that the time step for this model is 2 years.
+    The population has been sampled and an initial population vector is given:
+    \begin{equation}
+        P =
+        \begin{bmatrix}
+            289 & 211 & 120 & 76  & 51
+        \end{bmatrix}\label{eq:equation14}
+    \end{equation}
+
+    In order to best understand the transition matrix (13), each value can be broken down.
+    The first row represents the number of new fish that are produced by each fish in the stage during each time step of two years.
+    For example, each fish that is 4--6 years old (in the third stage) will produce an average of 1.9 new cod fish before they progress to the following stage (6--8 years old).
+    The values that are nonzero and not in the first row represent survival percentages.
+    For example, the value in $T_{12}$, 0.61, means that 61\% of newborn fish (0--2 years old) will make it to the following stage, 2--4 years old.
+    The rest die.
+    It is important to note that because this is a Leslie matrix, no fish remains in the same stage for consecutive time steps (except the last stage, as it includes fish of all ages over 8 years).
+    For a column $n$ in a Leslie matrix, only the values in row 1 and in row $n+1$ are non-zero.
+    In a matrix model based on maturity, or some other metric, rather than age, this would not hold true.
+
+    \subsubsection{Current Conditions}\label{subsubsec:current-conditions}
+
+    \hspace{\parindent}Based on this transition matrix and initial population vector, the population trajectory can be determined.
+    Because the time step of the transition matrix is 2 years, the time represented by the x-axis in Figure~\ref{fig:cod_traj_20} is $\frac{1}{2}$ of the actual time elapsed.
+    \begin{figure} [!h]
+        \centering
+        \includegraphics[scale=0.5]{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/Graphs/Cod Population 20 Years}
+        \caption{Trajectory of cod population for next 20 years}
+        \label{fig:cod_traj_20}
+    \end{figure}
+
+    After the stable stage distribution is reached, the population steadily grows.
+    After 20 years, the population has grown slightly, from 741 to 881.
+    Because the asymptotic growth rate is very close to 1, at 1.025, the exponential nature of population growth is not visible in a 10-time-step window.
+
+    \subsubsection{New Fishing Technology}\label{subsubsec:proposed-changes}
+
+    \hspace{\parindent}New fishing technology is developed that changes the survival rates and fecundities of the cod population.
+    The new transition matrix $T'$ is defined as $T'=T - F$, where $F$ is the matrix that represents the effects of the new fishing technology:
+    \begin{equation}
+        F =
+        \begin{bmatrix}
+            0    & 0   & 0.1 & 0   & 0   \\
+            0    & 0   & 0   & 0   & 0   \\
+            0    & 0.04& 0   & 0   & 0   \\
+            0    & 0   & 0.02& 0   & 0   \\
+            0    & 0   & 0   & 0   & 0
+        \end{bmatrix}\label{eq:equation15}
+    \end{equation}
+
+    A lobbyist proposes that because $F^3=0$, that the changes will not have an impact in 6 years.
+    The validity of this claim can be tested simply by comparing the dominant eigenvalues of the matrices $T$ and $T'$.
+    Rounded to 8 figures, the dominant eigenvalue of $T$ is equal to $1.0253602$.
+    The value for $T'$, however, rounds to $0.99405631$.
+    Notably, the dominant eigenvalue (asymptotic growth rate) has changed, and even dropped below 1.
+    \begin{figure} [!h]
+        \begin{minipage}{0.5\linewidth}
+            \centering
+            \includegraphics[scale=0.36]{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/Graphs/Cod Population 20 Years}
+        \end{minipage}\hfill
+        \begin{minipage}{0.5\linewidth}
+            \centering
+            \includegraphics[scale=0.36]{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/Graphs/Cod Population 20 Years With New Fishing Tech}
+        \end{minipage}
+        \caption{Before (left) vs. after (right) new fishing technology}
+        \label{fig:b_v_a_fish_tech}
+    \end{figure}
+
+    It can be seen in Figure~\ref{fig:b_v_a_fish_tech} that the lobbyist is severely wrong.
+    The changes that will result by adding a matrix $M$ to a transition matrix $T$ cannot be predicted without knowing that $T$ is.
+    The properties of $M$ are not indicative of the effect adding $M$ to $T$ will have on the population.
+
+    \subsection{Stable Fishing Laws}\label{subsec:stable-fishing-laws}
+
+    In order for the cod population to remain stable over time, the asymptotic growth rate must be equal to 1.
+    This means that once the population reaches the stable stage distribution, it will stay constant.
+    Another way of saying this is that the dominant eigenvalue of the transition matrix must be equal to 1.
+    The following equation defines an eigenvalue:
+    \begin{equation}
+        \textbf{A}x = \lambda x\label{eq:equation16}
+    \end{equation}
+    This means that multiplying a matrix $\textbf{A}$ by a vector $x$ has the same effect as multiplying that vector $x$ by some constant $\lambda$.
+    The eigenvalue equals $\lambda$.
+    \begin{proof}
+        Let $\lambda = 1$:
+        \begin{align*}
+            \textbf{A}x &= \lambda x \\
+            \textbf{A}x - \lambda x &= 0 \\
+            \textbf{A}x - \lambda\textbf{I}x &= 0 \\
+            (\textbf{A} - \lambda\textbf{I})\cdot x &= 0 \\
+            (\textbf{A} - \textbf{I})\cdot x &= 0 \qedhere
+        \end{align*}
+    \end{proof}
+    \noindent Because the zero vector is not considered a solution to this, $x$ must be nonzero.
+    If $(\textbf{A} - \textbf{I})^{-1}$ exists, then it can be multiplied by each side of the equation yielding the 0 vector.
+    Thus, $(\textbf{A} - \textbf{I})^{-1}$ must not exist.
+    If a square matrix is not invertible, its determinant is equal to 0.
+    This is true because
+    \begin{itemize}
+        \item Row operations to a matrix $\textbf{A}$do not change whether the determinant is 0, $\therefore \det(\textbf{A}) = 0 \leftrightarrow \det(rref(\textbf{A})) = 0$~\cite{towers_24_nodate}
+        \item $rref(\textbf{A}) = I$ if and only if $\textbf{A}$ is not invertible, $\therefore rref(\textbf{A})$ has at least one 0 row or column, and thus $\det(\textbf{A}) = 0$~\cite{towers_24_nodate}
+    \end{itemize}
+    Which leads to:
+    \begin{equation}
+        \det(\textbf{A} - \textbf{I}) = 0\label{eq:equation17}
+    \end{equation}
+
+    This can be used with the cod transition matrix in order to find a stable fishing scheme.
+    Recall that fecundity equals some fertility value times the survival rating, so dividing the fecundity by survival will yield that fertility.
+    Assuming that only the survival attributes of the cod can be modified, and that no baby cod should be caught, a new transition matrix can be formed:
+    \begin{equation}
+        \begin{bmatrix}
+            0    & \frac{1}{0.33} \cdot (0.33 + F'_{32}) & \frac{1.9}{0.21} \cdot (0.21 + F'_{43}) & \frac{1.7}{0.13} \cdot (0.13 + F'_{54}) & 0   \\
+            0.61 & 0   & 0   & 0   & 0   \\
+            0    & 0.33 + F'_{32} & 0   & 0   & 0   \\
+            0    & 0   & 0.21 + F'_{43} & 0   & 0   \\
+            0    & 0   & 0   & 0.13 + F'_{54} & 0.08 + F'_{55}
+        \end{bmatrix}\label{eq:equation18}
+    \end{equation}
+    Here, $F'_{ij}$ represents the value of the new fishing scheme matrix $F'$, in row $i$ and column $j$.
+    It is useful to include everything in one matrix so that it can be plugged into (17) and solved.
+    The result is the following polynomial:
+    \begin{equation}
+        \begin{split}
+        (-6.55605 \cdot F_{43} F_{32} - 7.97692 \cdot F_{43} F_{54} F_{32} - 1.67515 \cdot F_{54} F_{32} - 3.22525 \cdot F_{32}~- \\
+        2.1635 \cdot F_{43} - 2.63238 \cdpt F_{43} F_{54} - 0.552801 \cdot F_{54} - 0.0643341) \cdot (F_{55} - 0.92) = 0
+        \end{split}\label{eq:equation19}
+    \end{equation}
+    \hspace{\parindent}If values of $F_{32}$, $F_{43}$, and $F_{54}$ are chosen such that the first term in this polynomial is 0, then $F_{55}$ can be set to any value without changing the asymptotic growth rate.
+    For this reason, the term $(F_{55} - 0.92)$ will be omitted from future equations, and citizens will be permitted to catch as many fish over 8 years old as they wish.
+    Solving $F_{54}$ for $F_{32}$ and $F_{43}$ yields:
+    \begin{equation}
+        F_{54} \approx \frac
+        {6.55605 \cdot F_{43} F_{32} + 3.22525 \cdot F_{32} + 2.1635 \cdot F_{43} + 0.0643341}
+        {-7.97692 \cdot F_{32} F_{43} - 1.67515 \cdot F_{32} - 2.63238 \cdot F_{43} - 0.552801}\label{eq:equation20}
+    \end{equation}
+    $F_{54} = f(F_{32}, F_{43})$ can then be graphed (see Figure~\ref{fig:stable_variables_graph}), which provides some intuition into possible values of $F_{32}$, $F_{43}$, and $F_{54}$.
+    \begin{figure} [!h]
+        \begin{minipage}{0.5\linewidth}
+            \centering
+            \includegraphics[scale=0.25]{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/Graphs/Graph of F54 with respect to F43 and F32 WINDOW 1.5}
+            \caption*{All axes $\in(-1.5, 1.5)$}
+        \end{minipage}\hfill
+        \begin{minipage}{0.5\linewidth}
+            \centering
+            \includegraphics[scale=0.25]{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/Graphs/Graph of F54 with respect to F43 and F32 WINDOW 0.1}
+            \caption*{All axes $\in(-0.1, 0.1)$}
+        \end{minipage}
+        \caption{$F_{54} = f(F_{32}, F_{43})$, equation (20), finding a stable fishing scheme}
+        \label{fig:stable_variables_graph}
+    \end{figure}
+
+    Assuming that the fishing scheme cannot cause the cod's survival rates to increase, only the points on this surface when all variables are negative are relevant.
+    If any variable is too negative, however, it will cause some element of the transition matrix to be negative, which is also not relevant.
+    With these two points in mind, only the little bit of the surface near the z-axis and in the seventh octant is relevant.
+
+    Because the population remains constant no matter which values are chosen (on this surface), the combination that maximizes the number of fish caught is ideal.
+    % **find F_32, F_43, and F_54 such that the stable stage distribution is as even as possible, theoretically maximizing fish caught**
+    For this project, however, any combination will do.
+    In this case, the point $f(-0.11, -0.11)$ is chosen, meaning that the fishing matrix is:
+    \begin{equation}
+        F' =
+        \begin{bmatrix}
+            0    & 0.033 & 0.0995& 0.1438& 0   \\
+            0    &  0    &  0    &  0    & 0   \\
+            0    &  0.011&  0    &  0    & 0   \\
+            0    &  0    &  0.011&  0    & 0   \\
+            0    &  0    &  0    &  0.01155& 0
+        \end{bmatrix}\label{eq:equation21}
+    \end{equation}
+    Such that $T - F'$ is a stable transition matrix for the cod population.
+
+    Under this fishing plan, the population remains stable at 752 fish.
+    The stable stage distribution is:
+    \begin{equation}
+        \begin{bmatrix}
+            0.54109886 & 0.3300703 & 0.10529243 & 0.02095319 & 0.00258521
+        \end{bmatrix}\label{eq:equation22}
+    \end{equation}
+    So the actual distribution of the population is:
+    \begin{equation}
+        \begin{bmatrix}
+            407 & 248 & 79 & 16 & 2
+        \end{bmatrix}\label{eq:equation23}
+    \end{equation}
+
+    If this is used as the initial population vector and the original transition matrix $T$ is used for the transition matrix, the extent to which the cod population would increase if fishing was stopped can be determined.
+    This is equal to the number of fish caught each time step.
+    In this case, the population would increase to 774 in one time step, meaning an increase of 22 cod.
+    So when the cod population is at 752, 11 fish can be caught per year while keeping the population stable with this fishing scheme.
+
+    The long term trajectories for the three models (old fishing tech, new fishing tech, and stable fishing tech) are significantly different.
+    \begin{figure} [!h]
+        \begin{minipage}{0.3333\linewidth}
+            \centering
+            \includegraphics[scale=0.24]{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/Graphs/Cod Population 20 Years}
+        \end{minipage}\hfill
+        \begin{minipage}{0.3333\linewidth}
+            \centering
+            \includegraphics[scale=0.24]{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/Graphs/Cod Population 20 Years With New Fishing Tech}
+        \end{minipage}\hfill
+        \begin{minipage}{0.3333\linewidth}
+            \centering
+            \includegraphics[scale=0.24]{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/Graphs/Cod Population 20 Years With Stable Fishing Tech}
+        \end{minipage}
+        \caption{old (left) vs. new (center) vs. stable (right) fishing schemes in 20 years}
+        \label{fig:old_new_stable}
+    \end{figure}
+
+    Under the old fishing scheme, the population would spiral out of control and lots of fish catching would be left on the table.
+    The new fishing technology would quickly destroy the cod population.
+    The stable scheme, however, establishes a balance between the two.
+    If the city wishes for the cod population to increase or decrease, it can temporarily change from the stable scheme to either the old or new scheme, depending on the intended change in population size.
+
+    \newpage
+    \begin{center}
+        \section{Conclusion}\label{sec:conclusion}
+    \end{center}
+
+    Matrix models are a powerful tool when analyzing how populations will change over time, if there is enough data.
+    For cod these models do a reasonably good job, but they leave out a few key behaviors of the population:
+    \begin{itemize}
+        \item cod migrate annually, which likely affects how fishing impacts the population
+        \item cod reproduction can be thrown off by environmental factors such as heat waves, which can cause an unusually small juvenile population in a given year
+        \item Animals near cod in the food chain could undergo changes to their populations, which would affect the cod population
+    \end{itemize}
+
+    These types of issues are not exclusive to cod.
+    Randomness as a whole is not accounted for with matrix models.
+    Figure~\ref{fig:randomness_stable} shows how if randomness is introduced, the population can vary extremely.
+    \begin{figure} [!h]
+        \centering
+        \includegraphics[scale=0.5]{C:/Users/mitch/Documents/School/2023-24/Linear Algebra/Project 1/Graphs/Cod Population 50 Years With Stable Fishing Tech and Randomness}
+        \caption{1000 independent replicates of cod population with demographic stochasticity}
+        \label{fig:randomness_stable}
+    \end{figure}  % TODO: save graph from python and edit figure in idea
+
+    One-off events are not accounted for by matrix population models, but population composition is.
+    When compared to traditional exponential models, matrix models are much more useful in the short term because of the second order dynamics that exponential models lack.
+    They are also simple enough that they can be run easily on any modern computer, even for hundreds or thousands of time steps.
+    This makes them a very appealing option for a variety of applications~\cite{shoemaker_lab_2024}.
+
+    In the real world, matrix models are often used to model bacteria populations.
+    Single celled organisms are especially predictable and go through distinct stages of life.
+    On a global scale, such models could be used to combat extinction of endangered animal species, explain unexpected phenomena based on stage distribution, or even interpret botanical populations.
+    When dealing with fragile populations such as endangered species, though, any error could be tragic.
+    In these situations, it may be better to rely on a more robust or adaptable model for analyzing the population~\cite{hendricks_55_2021}.
+
+    \newpage
+    \begin{center}
+        \section{References}\label{sec:references}
+    \end{center}
+
+    \printbibliography[heading=none]
+
+\end{document}
